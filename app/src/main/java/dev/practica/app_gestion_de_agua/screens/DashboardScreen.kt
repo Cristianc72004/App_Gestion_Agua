@@ -50,9 +50,9 @@ fun DashboardScreen(navController: NavController) {
     var escala by remember { mutableStateOf("") }
     var alerta by remember { mutableStateOf<String?>(null) }
 
-    // Leer datos desde Firebase
+    // Escuchar cambios en Firebase en tiempo real
     LaunchedEffect(Unit) {
-        database.orderByChild("nodo").equalTo("nodo1").addListenerForSingleValueEvent(object : ValueEventListener {
+        database.orderByChild("nodo").equalTo("nodo1").addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 var ultimaMedicion: DataSnapshot? = null
                 for (dato in snapshot.children) {
@@ -61,6 +61,7 @@ fun DashboardScreen(navController: NavController) {
                         ultimaMedicion = dato
                     }
                 }
+
                 ultimaMedicion?.let {
                     nivelAgua = it.child("nivel_agua_cm").getValue(Double::class.java) ?: 0.0
                     volumen = it.child("volumen_litros").getValue(Double::class.java) ?: 0.0
