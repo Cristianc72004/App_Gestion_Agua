@@ -1,7 +1,8 @@
 package dev.practica.app_gestion_de_agua.screens
 
-
 import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,50 +30,47 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LoginScreen(onNavigateToRegister: () -> Unit, onLoginSuccess: () -> Unit) {
+    val context = LocalContext.current
+    val auth = FirebaseAuth.getInstance()
+
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
     Scaffold {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF1E3A8A))
+            modifier = Modifier.fillMaxSize().background(Color(0xFF1E3A8A))
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Icono de Persona",
-                    modifier = Modifier
-                        .size(150.dp)
-                        .padding(bottom = 16.dp),
+                    modifier = Modifier.size(150.dp).padding(bottom = 16.dp),
                     tint = Color.White
                 )
-
-                Spacer(modifier = Modifier.height(20.dp))
 
                 Text("ACCESO", style = MaterialTheme.typography.headlineMedium, color = Color.White)
                 Spacer(modifier = Modifier.height(20.dp))
 
-                var email by rememberSaveable { mutableStateOf("") }
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -82,8 +80,6 @@ fun LoginScreen(onNavigateToRegister: () -> Unit, onLoginSuccess: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                var password by rememberSaveable { mutableStateOf("") }
-                var showPassword by rememberSaveable { mutableStateOf(false) }
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -93,7 +89,7 @@ fun LoginScreen(onNavigateToRegister: () -> Unit, onLoginSuccess: () -> Unit) {
                         IconButton(onClick = { showPassword = !showPassword }) {
                             Icon(
                                 imageVector = if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = if (showPassword) "Mostrar contraseña" else "Ocultar contraseña"
+                                contentDescription = if (showPassword) "Ocultar contraseña" else "Mostrar contraseña"
                             )
                         }
                     },
@@ -103,23 +99,30 @@ fun LoginScreen(onNavigateToRegister: () -> Unit, onLoginSuccess: () -> Unit) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { onLoginSuccess() },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        isLoading = true
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                isLoading = false
+                                if (task.isSuccessful) {
+                                    Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                                    onLoginSuccess()
+                                } else {
+                                    Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                                    Log.e("FirebaseAuth", "Error: ${task.exception}")
+                                }
+                            }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 ) {
-                    Text("ACCEDER")
+                    Text(if (isLoading) "Cargando..." else "ACCEDER")
                 }
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 TextButton(onClick = { onNavigateToRegister() }) {
-                    Text(
-                        text = buildAnnotatedString {
-                            append("¿No tienes una cuenta? ")
-                            pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                            append("Regístrate aquí.")
-                            pop()
-                        },
-                        color = Color.White
-                    )
+                    Text("¿No tienes una cuenta? Regístrate aquí.", color = Color.White)
                 }
             }
         }
