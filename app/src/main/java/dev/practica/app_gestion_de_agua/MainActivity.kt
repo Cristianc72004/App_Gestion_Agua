@@ -40,7 +40,7 @@ fun AppNavigation(startDestination: String) {
             RegisterScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable("dashboard") {
-            DashboardScreen()
+            DashboardScreen(navController = navController)
         }
     }
 }
