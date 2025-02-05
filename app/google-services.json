@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "476899653319",
+    "firebase_url": "https://appagua-24cff-default-rtdb.firebaseio.com",
+    "project_id": "appagua-24cff",
+    "storage_bucket": "appagua-24cff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:476899653319:android:5738a594cbcca3cd9df0e2",
+        "android_client_info": {
+          "package_name": "dev.practica.app_gestion_de_agua"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-jMfLrre4Ej60-ATGZjA6UnTRiMyInuU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
