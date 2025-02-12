@@ -2,15 +2,24 @@ package dev.practica.app_gestion_de_agua.screens
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,8 +34,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -46,8 +59,8 @@ fun DashboardScreen(navController: NavController) {
 
     var nivelAgua by remember { mutableStateOf(0.0) }
     var volumen by remember { mutableStateOf(0.0) }
-    var coordenadas by remember { mutableStateOf("") }
-    var escala by remember { mutableStateOf("") }
+    var coordenadas by remember { mutableStateOf("Desconocido") }
+    var escala by remember { mutableStateOf("Desconocido") }
     var alerta by remember { mutableStateOf<String?>(null) }
 
     // Escuchar cambios en Firebase en tiempo real
@@ -84,7 +97,14 @@ fun DashboardScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Medida actual") },
+                title = {
+                    Text(
+                        "Estado del Agua",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                },
                 actions = {
                     IconButton(
                         onClick = {
@@ -93,7 +113,11 @@ fun DashboardScreen(navController: NavController) {
                             navController.navigate("login") { popUpTo("login") { inclusive = true } }
                         }
                     ) {
-                        Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = "Cerrar sesión")
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Cerrar sesión",
+                            tint = Color.Red
+                        )
                     }
                 }
             )
@@ -102,30 +126,110 @@ fun DashboardScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFF0D47A1), Color(0xFF1976D2))
+                    )
+                )
                 .padding(paddingValues)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("AQUAWATCH", fontSize = 24.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "AQUAWATCH",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                fontFamily = FontFamily.SansSerif
+            )
 
-            Text("Nivel de agua: $nivelAgua cm", fontSize = 20.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(8.dp))
+            // Contenedores de información con colores y diseño moderno
+            InfoCard(
+                title = "Nivel de Agua",
+                value = "$nivelAgua cm",
+                icon = Icons.Filled.WaterDrop,
+                backgroundColor = Color(0xFF42A5F5)
+            )
 
-            Text("Volumen: $volumen L", fontSize = 20.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(8.dp))
+            InfoCard(
+                title = "Volumen de Agua",
+                value = "$volumen L",
+                icon = Icons.Filled.Notifications,
+                backgroundColor = Color(0xFF66BB6A)
+            )
 
-            Text("Coordenadas: $coordenadas", fontSize = 16.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(8.dp))
+            InfoCard(
+                title = "Ubicación",
+                value = coordenadas,
+                icon = Icons.Filled.LocationOn,
+                backgroundColor = Color(0xFFFFA726)
+            )
 
-            Text("Escala: $escala", fontSize = 20.sp, color = when (escala) {
-                "Malo" -> Color.Red
-                "Normal" -> Color.Yellow
-                "Bueno" -> Color.Green
-                else -> Color.Gray
-            })
+            InfoCard(
+                title = "Estado del Agua",
+                value = escala,
+                icon = Icons.Filled.Warning,
+                backgroundColor = when (escala) {
+                    "Malo" -> Color.Red
+                    "Normal" -> Color.Yellow
+                    "Bueno" -> Color.Green
+                    else -> Color.Gray
+                }
+            )
+
+            alerta?.let {
+                InfoCard(
+                    title = "Alerta",
+                    value = it,
+                    icon = Icons.Filled.Warning,
+                    backgroundColor = Color(0xFFD32F2F)
+                )
+            }
+        }
+    }
+}
+
+// 📌 Componente de Tarjeta de Información
+@Composable
+fun InfoCard(title: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, backgroundColor: Color) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(6.dp)
+            .shadow(8.dp, RoundedCornerShape(16.dp))
+            .animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(18.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    title,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif
+                )
+                Text(
+                    value,
+                    fontSize = 24.sp,
+                    color = Color.White,
+                    fontFamily = FontFamily.SansSerif
+                )
+            }
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = Color.White,
+                modifier = Modifier.size(36.dp)
+            )
         }
     }
 }
